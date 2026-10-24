@@ -13,6 +13,9 @@ jobs:
     runs-on: macos-15
     timeout-minutes: 180
     steps:
+      - uses: actions/checkout@v4
+        with:
+          path: lab
       - name: Fetch source (private)
         env:
           KEY: ${{ secrets.SAVVY_DEPLOY_KEY }}
@@ -82,7 +85,7 @@ jobs:
           LPID=$!
           xcrun simctl io "$UDID" recordVideo --codec h264 --force out/shots/launch.mp4 > /dev/null 2>&1 &
           VPID=$!
-          for t in 30 60 90 120; do sleep 30; xcrun simctl io "$UDID" screenshot "out/shots/at-${t}s.png" > /dev/null; done
+          for t in 45; do sleep 45; xcrun simctl io "$UDID" screenshot "out/shots/at-${t}s.png" > /dev/null; done
           kill -INT $VPID 2>/dev/null; sleep 3
           kill $LPID $SPID 2>/dev/null || true
           xcrun simctl spawn "$UDID" log show --last 5m --style compact             --predicate 'process CONTAINS[c] "SavvyTravel" OR subsystem CONTAINS[c] "savvytravel" OR eventMessage CONTAINS[c] "SavvyTravel"'             > out/device.log 2>&1 || true
@@ -91,10 +94,11 @@ jobs:
       - name: Drive the flows (Maestro)
         continue-on-error: true
         run: |
+          export MAESTRO_CLI_NO_ANALYTICS=1
           curl -Ls "https://get.maestro.mobile.dev" | bash > out/maestro-install.log 2>&1
           export PATH="$PATH:$HOME/.maestro/bin"
           mkdir -p out/flow && cd out/flow
-          maestro test ../../flows/apple.yaml > ../maestro.log 2>&1 || echo "flow had failures"
+          maestro test ../../lab/flows/apple.yaml > ../maestro.log 2>&1 || echo "flow had failures"
           ls
       - name: Encrypt results
         if: always()
