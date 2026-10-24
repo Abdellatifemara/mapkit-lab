@@ -1,0 +1,45 @@
+appId: com.savvytravel.app
+---
+- launchApp:
+    stopApp: true
+- extendedWaitUntil:
+    visible: ".*Map.*"
+    timeout: 60000
+- openLink: "savvytravel://collection/4e1e1cbf-cfdf-480c-8d95-5ca493fed365"
+- tapOn:
+    text: "Open"
+    optional: true
+- waitForAnimationToEnd:
+    timeout: 12000
+- takeScreenshot: t01-trip
+- scrollUntilVisible:
+    element:
+      text: ".*FOAM.*"
+    timeout: 20000
+    optional: true
+- takeScreenshot: t02-apple-row
+- scrollUntilVisible:
+    element:
+      text: ".*(Generate itinerary|Regenerate|Plan these days).*"
+    direction: UP
+    timeout: 15000
+    optional: true
+- takeScreenshot: t03-before-generate
+- tapOn:
+    text: ".*Generate itinerary.*"
+    optional: true
+- tapOn:
+    text: ".*Rebuild the plan.*"
+    optional: true
+- waitForAnimationToEnd:
+    timeout: 5000
+- takeScreenshot: t04-sheet
+- tapOn:
+    text: ".*(Plan my trip|Plan these days again).*"
+    optional: true
+- waitForAnimationToEnd:
+    timeout: 60000
+- takeScreenshot: t05-after-60s
+- waitForAnimationToEnd:
+    timeout: 60000
+- takeScreenshot: t06-after-120s
