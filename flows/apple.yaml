@@ -5,19 +5,32 @@ appId: com.savvytravel.app
 - extendedWaitUntil:
     visible: "Map"
     timeout: 60000
-- takeScreenshot: f01-home
 - tapOn: "Map"
+- extendedWaitUntil:
+    visible: "Legal"
+    timeout: 20000
+    optional: true
+- takeScreenshot: f01-map-open
+- tapOn:
+    text: "Show my location"
+    optional: true
 - waitForAnimationToEnd:
-    timeout: 8000
-- takeScreenshot: f02-map
+    timeout: 10000
+- takeScreenshot: f02-map-my-location
 - tapOn:
     text: "Search your saved places"
 - inputText: "pharmacy"
+- hideKeyboard
 - waitForAnimationToEnd:
     timeout: 6000
 - takeScreenshot: f03-search-pharmacy
-- eraseText: 20
+- tapOn:
+    text: "Clear search"
+    optional: true
+- tapOn:
+    text: "Search your saved places"
 - inputText: "cafe"
+- hideKeyboard
 - waitForAnimationToEnd:
     timeout: 6000
 - takeScreenshot: f04-search-cafe
