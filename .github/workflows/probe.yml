@@ -1,0 +1,14 @@
+name: probe
+on:
+  workflow_dispatch:
+    inputs:
+      image:
+        default: macos-26
+jobs:
+  probe:
+    runs-on: ${{ inputs.image }}
+    timeout-minutes: 10
+    steps:
+      - run: |
+          sw_vers; ls -d /Applications/Xcode*.app
+          for x in /Applications/Xcode*.app; do sudo xcode-select -s "$x"; xcrun simctl list runtimes 2>/dev/null | grep -i ios; done | sort -u
