@@ -1,0 +1,35 @@
+appId: com.apple.Maps
+---
+- launchApp:
+    clearState: false
+- tapOn:
+    text: "(Allow|Allow While Using App|Don’t Allow|Don't Allow|Not Now|Continue)"
+    optional: true
+- tapOn:
+    text: "(Allow|Allow While Using App|Don’t Allow|Don't Allow|Not Now|Continue)"
+    optional: true
+- tapOn:
+    text: "(Allow|Allow While Using App|Don’t Allow|Don't Allow|Not Now|Continue)"
+    optional: true
+- waitForAnimationToEnd:
+    timeout: 5000
+- takeScreenshot: a01-open
+- openLink: "maps://?ll=30.0571,31.2243&z=16"
+- tapOn:
+    text: "(Open|Allow|Not Now)"
+    optional: true
+- waitForAnimationToEnd:
+    timeout: 15000
+- takeScreenshot: a02-zamalek-z16
+- openLink: "maps://?ll=30.0571,31.2243&z=13"
+- waitForAnimationToEnd:
+    timeout: 15000
+- takeScreenshot: a03-cairo-z13
+- openLink: "maps://?ll=29.9792,31.1342&z=16"
+- waitForAnimationToEnd:
+    timeout: 15000
+- takeScreenshot: a04-giza-z16
+- openLink: "maps://?ll=26.8,30.8&z=5"
+- waitForAnimationToEnd:
+    timeout: 15000
+- takeScreenshot: a05-egypt-z5

@@ -1,0 +1,27 @@
+appId: com.savvytravel.app
+---
+- launchApp:
+    stopApp: true
+- extendedWaitUntil:
+    visible: ".*Map.*"
+    timeout: 60000
+- tapOn: "Map"
+- waitForAnimationToEnd:
+    timeout: 10000
+- takeScreenshot: o01-world
+- tapOn:
+    text: "Show my location"
+    optional: true
+- waitForAnimationToEnd:
+    timeout: 12000
+- takeScreenshot: o02-zamalek
+- pinch:
+    scale: 0.3
+- waitForAnimationToEnd:
+    timeout: 10000
+- takeScreenshot: o03-zoomed-out-once
+- pinch:
+    scale: 0.2
+- waitForAnimationToEnd:
+    timeout: 10000
+- takeScreenshot: o04-zoomed-out-more
