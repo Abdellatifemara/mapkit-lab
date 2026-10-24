@@ -1,0 +1,59 @@
+name: shots
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+jobs:
+  shots:
+    runs-on: macos-15
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - name: Tools
+        run: brew install xcodegen
+      - name: Build for the simulator
+        run: |
+          xcodegen generate
+          xcodebuild -project MapKitLab.xcodeproj -scheme MapKitLab -sdk iphonesimulator \
+            -configuration Debug -derivedDataPath build CODE_SIGNING_ALLOWED=NO build | tail -5
+      - name: Boot a simulator
+        run: |
+          xcrun simctl list devices available | grep -E "iPhone 1[5-7]" | head -5
+          UDID=$(xcrun simctl list devices available | grep -E "iPhone 16 Pro \(" | head -1 | grep -oE "[0-9A-F-]{36}")
+          [ -n "$UDID" ] || UDID=$(xcrun simctl list devices available | grep -E "iPhone" | head -1 | grep -oE "[0-9A-F-]{36}")
+          echo "UDID=$UDID" >> $GITHUB_ENV
+          xcrun simctl boot "$UDID"
+          xcrun simctl bootstatus "$UDID" -b
+          xcrun simctl install "$UDID" build/Build/Products/Debug-iphonesimulator/MapKitLab.app
+          xcrun simctl status_bar "$UDID" override --time 9:41 || true
+      - name: Screenshots
+        run: |
+          mkdir -p shots
+          shot() {  # name, then launch args
+            n=$1; shift
+            xcrun simctl terminate "$UDID" dev.mapkitlab.app 2>/dev/null || true
+            xcrun simctl launch "$UDID" dev.mapkitlab.app "$@" >/dev/null
+            sleep 14
+            xcrun simctl io "$UDID" screenshot "shots/$n.png"
+            echo "shot $n"
+          }
+          # Apple's own Maps app at the same spot, for comparison.
+          xcrun simctl openurl "$UDID" "maps://?ll=30.0571,31.2243&z=16" && sleep 18 && xcrun simctl io "$UDID" screenshot shots/00-apple-maps-app-zamalek.png || true
+          xcrun simctl openurl "$UDID" "maps://?ll=26.8,30.8&z=3" && sleep 18 && xcrun simctl io "$UDID" screenshot shots/00-apple-maps-app-zoomed-out.png || true
+          shot 01-standard-all        -style standard  -poi all
+          shot 02-standard-travel     -style standard  -poi travel
+          shot 03-realistic-all       -style realistic -poi all
+          shot 04-realistic-travel    -style realistic -poi travel
+          shot 05-realistic-tilt45    -style realistic -poi travel -pitch 45 -span 0.01
+          shot 06-muted-travel        -style muted     -poi travel
+          shot 07-hybrid-travel       -style hybrid    -poi travel
+          shot 08-globe-standard      -style standard  -poi all -span 150
+          shot 09-globe-realistic     -style realistic -poi all -span 150
+          shot 10-globe-hybrid        -style hybrid    -poi all -span 150
+          shot 11-sheet-no-inset      -style realistic -poi travel -sheet 1 -legalInset 0
+          shot 12-sheet-with-inset    -style realistic -poi travel -sheet 1 -legalInset 1
+          shot 13-giza-realistic-tilt -style realistic -poi travel -lat 29.9792 -lng 31.1342 -span 0.03 -pitch 50
+      - uses: actions/upload-artifact@v4
+        with:
+          name: shots
+          path: shots
