@@ -10,6 +10,9 @@ on:
       flow:
         description: flow file under flows/
         default: apple.yaml
+      runtime:
+        description: iOS runtime (default = runner default; 'newest' = newest installed)
+        default: default
 permissions:
   actions: read
   contents: read
@@ -39,9 +42,15 @@ jobs:
         env:
           SIM_TOKEN: ${{ secrets.SIM_TOKEN }}
         run: |
-          UDID=$(xcrun simctl list devices available | grep -E "iPhone 16 Pro \(" | head -1 | grep -oE "[0-9A-F-]{36}")
-          [ -n "$UDID" ] || UDID=$(xcrun simctl list devices available | grep -E "iPhone" | head -1 | grep -oE "[0-9A-F-]{36}")
+          if [ "${{ inputs.runtime }}" = "newest" ]; then
+            RT=$(xcrun simctl list runtimes | grep -E "^iOS" | grep -v unavailable | tail -1 | grep -oE "com\.apple\.CoreSimulator\.SimRuntime\.[A-Za-z0-9-]+")
+            UDID=$(xcrun simctl create "New" "iPhone 16 Pro" "$RT")
+          else
+            UDID=$(xcrun simctl list devices available | grep -E "iPhone 16 Pro \(" | head -1 | grep -oE "[0-9A-F-]{36}")
+            [ -n "$UDID" ] || UDID=$(xcrun simctl list devices available | grep -E "iPhone" | head -1 | grep -oE "[0-9A-F-]{36}")
+          fi
           xcrun simctl boot "$UDID" && xcrun simctl bootstatus "$UDID" -b > /dev/null
+          xcrun simctl list devices | grep "$UDID"
           APP=$(ls -d app/*.app | head -1)
           BID=$(/usr/libexec/PlistBuddy -c "Print CFBundleIdentifier" "$APP/Info.plist")
           xcrun simctl install "$UDID" "$APP"
@@ -57,7 +66,7 @@ jobs:
           export PATH="$PATH:$HOME/.maestro/bin"
           xcrun simctl spawn "$UDID" log stream --level info --style compact --predicate 'process == "SavvyTravel"' > out/app-stream.log 2>&1 &
           mkdir -p out/flow && cd out/flow
-          maestro test --test-output-dir . "../../lab/flows/${{ inputs.flow }}" > ../maestro.log 2>&1 || echo "flow had failures"
+          maestro --device "$UDID" test --test-output-dir . "../../lab/flows/${{ inputs.flow }}" > ../maestro.log 2>&1 || echo "flow had failures"
           cp ../../lab/flows/*.png . 2>/dev/null || true
           find "$HOME/.maestro/tests" -name "*.png" -exec cp {} . \; 2>/dev/null || true
           ls
