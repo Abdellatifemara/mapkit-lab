@@ -31,6 +31,7 @@ jobs:
           ENVIRONMENT: production
           EXPO_PUBLIC_ENVIRONMENT: production
           EXPO_PUBLIC_API_URL: https://api.savvytravel.app/api/v1
+          E2E_SIM_TOKEN: ${{ secrets.SIM_TOKEN }}
         run: |
           set -o pipefail
           cd src/MobileFrontend
