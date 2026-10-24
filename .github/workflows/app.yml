@@ -23,6 +23,13 @@ jobs:
           GIT_SSH_COMMAND="ssh -i ~/.ssh/deploy" git clone -q --depth 1 --branch "${{ inputs.ref }}" \
             git@github.com:Abdellatifemara/SavvyTravel.git src >/dev/null 2>&1 && echo "source ok" || { echo "source failed"; exit 1; }
           rm -f ~/.ssh/deploy
+      - name: Newest Xcode (expo-age-range needs the iOS 26 SDK)
+        run: |
+          ls -d /Applications/Xcode*.app
+          X=$(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort -V | tail -1)
+          [ -n "$X" ] || X=$(ls -d /Applications/Xcode*.app | sort -V | tail -1)
+          sudo xcode-select -s "$X" && xcodebuild -version
+          xcrun simctl list runtimes | grep -i ios
       - uses: actions/setup-node@v4
         with:
           node-version: 20
