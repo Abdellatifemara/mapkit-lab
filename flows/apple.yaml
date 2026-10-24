@@ -20,7 +20,7 @@ appId: com.savvytravel.app
 - tapOn:
     text: "Search your saved places"
 - inputText: "pharmacy"
-- hideKeyboard
+- pressKey: Enter
 - waitForAnimationToEnd:
     timeout: 6000
 - takeScreenshot: f03-search-pharmacy
@@ -30,7 +30,7 @@ appId: com.savvytravel.app
 - tapOn:
     text: "Search your saved places"
 - inputText: "cafe"
-- hideKeyboard
+- pressKey: Enter
 - waitForAnimationToEnd:
     timeout: 6000
 - takeScreenshot: f04-search-cafe
