@@ -1,0 +1,68 @@
+appId: com.savvytravel.app
+---
+- launchApp:
+    stopApp: true
+- extendedWaitUntil:
+    visible: "Map"
+    timeout: 60000
+- tapOn: "Map"
+- extendedWaitUntil:
+    visible: "Legal"
+    timeout: 20000
+    optional: true
+- takeScreenshot: f01-map-open
+- tapOn:
+    text: "Show my location"
+    optional: true
+- waitForAnimationToEnd:
+    timeout: 10000
+- takeScreenshot: f02-map-my-location
+- tapOn:
+    text: "Search your saved places"
+- inputText: "pharmacy"
+- pressKey: Enter
+- waitForAnimationToEnd:
+    timeout: 6000
+- takeScreenshot: f03-search-pharmacy
+- tapOn:
+    text: "Clear search"
+    optional: true
+- tapOn:
+    text: "Search your saved places"
+- inputText: "cafe"
+- pressKey: Enter
+- waitForAnimationToEnd:
+    timeout: 6000
+- takeScreenshot: f04-search-cafe
+- tapOn:
+    id: "apple-result-0"
+    optional: true
+- waitForAnimationToEnd:
+    timeout: 8000
+- takeScreenshot: f05-place-sheet
+- tapOn:
+    id: "apple-place-add-to-trip"
+    optional: true
+- waitForAnimationToEnd:
+    timeout: 5000
+- takeScreenshot: f06-trip-picker
+- tapOn:
+    text: "E2E Giza pyramid"
+    optional: true
+- waitForAnimationToEnd:
+    timeout: 8000
+- takeScreenshot: g07-after-add
+- tapOn:
+    text: ".*Trips.*"
+    optional: true
+- waitForAnimationToEnd:
+    timeout: 8000
+- takeScreenshot: g08-trips
+- tapOn:
+    text: "E2E Giza pyramid"
+    optional: true
+- waitForAnimationToEnd:
+    timeout: 10000
+- takeScreenshot: g09-trip
+- scroll
+- takeScreenshot: g10-trip-scrolled
