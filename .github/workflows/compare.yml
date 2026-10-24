@@ -1,0 +1,56 @@
+name: compare
+# MapKit styles vs the real Apple Maps app, same spots, on the newest iOS simulator runtime.
+on:
+  workflow_dispatch:
+jobs:
+  compare:
+    runs-on: macos-15
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - name: Newest Xcode + newest iOS runtime device
+        run: |
+          X=$(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort -V | tail -1)
+          sudo xcode-select -s "$X" && xcodebuild -version
+          xcrun simctl list runtimes | grep -i ios
+          RT=$(xcrun simctl list runtimes | grep -E "^iOS" | grep -v unavailable | tail -1 | grep -oE "com\.apple\.CoreSimulator\.SimRuntime\.[A-Za-z0-9-]+")
+          echo "runtime $RT"
+          UDID=$(xcrun simctl create "Cmp" "iPhone 16 Pro" "$RT" 2>/dev/null || xcrun simctl create "Cmp" "com.apple.CoreSimulator.SimDeviceType.iPhone-16-Pro" "$RT")
+          echo "UDID=$UDID" >> $GITHUB_ENV
+          xcrun simctl boot "$UDID" && xcrun simctl bootstatus "$UDID" -b > /dev/null
+          xcrun simctl location "$UDID" set 30.0571,31.2243 || true
+          xcrun simctl privacy "$UDID" grant location com.apple.Maps || true
+          xcrun simctl privacy "$UDID" grant location dev.mapkitlab.app || true
+          xcrun simctl status_bar "$UDID" override --time 9:41 || true
+      - name: Build the lab app
+        run: |
+          brew install xcodegen > /dev/null
+          xcodegen generate > /dev/null
+          xcodebuild -project MapKitLab.xcodeproj -scheme MapKitLab -sdk iphonesimulator -configuration Debug \
+            -derivedDataPath build CODE_SIGNING_ALLOWED=NO build | tail -2
+          xcrun simctl install "$UDID" build/Build/Products/Debug-iphonesimulator/MapKitLab.app
+      - name: MapKit styles
+        run: |
+          mkdir -p shots
+          shot() { n=$1; shift; xcrun simctl terminate "$UDID" dev.mapkitlab.app 2>/dev/null || true
+            xcrun simctl launch "$UDID" dev.mapkitlab.app "$@" > /dev/null; sleep 15
+            xcrun simctl io "$UDID" screenshot "shots/$n.png" > /dev/null; echo "shot $n"; }
+          for st in legacy flat standard realistic; do
+            shot "k-$st-street"  -style $st -poi all -span 0.02
+            shot "k-$st-country" -style $st -poi all -lat 26.8 -lng 30.8 -span 15
+          done
+          xcrun simctl terminate "$UDID" dev.mapkitlab.app || true
+      - name: Apple Maps app (Maestro)
+        continue-on-error: true
+        run: |
+          export MAESTRO_CLI_NO_ANALYTICS=1
+          curl -Ls "https://get.maestro.mobile.dev" | bash > /dev/null 2>&1
+          export PATH="$PATH:$HOME/.maestro/bin"
+          mkdir -p mo && cd mo
+          maestro --device "$UDID" test --test-output-dir . ../flows/applemaps-compare.yaml > ../shots/maestro.log 2>&1 || true
+          find . -name "a0*.png" -exec cp {} ../shots/ \;
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: compare
+          path: shots

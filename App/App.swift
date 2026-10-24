@@ -70,6 +70,14 @@ final class MapViewController: UIViewController {
       let c = MKHybridMapConfiguration(elevationStyle: .realistic)
       c.pointOfInterestFilter = poi
       map.preferredConfiguration = c
+    case "legacy":
+      // No configuration object at all: the plain MKMapView map type most apps use.
+      map.mapType = .standard
+      map.pointOfInterestFilter = poi
+    case "flat":
+      let c = MKStandardMapConfiguration(elevationStyle: .flat, emphasisStyle: .default)
+      c.pointOfInterestFilter = poi
+      map.preferredConfiguration = c
     case "imagery":
       map.preferredConfiguration = MKImageryMapConfiguration(elevationStyle: .realistic)
     default:

@@ -29,7 +29,7 @@ appId: com.apple.Maps
 - waitForAnimationToEnd:
     timeout: 15000
 - takeScreenshot: a04-giza-z16
-- openLink: "maps://?ll=26.8,30.8&z=5"
+- openLink: "maps://?ll=26.8,30.8&z=6"
 - waitForAnimationToEnd:
     timeout: 15000
 - takeScreenshot: a05-egypt-z5
