@@ -1,0 +1,70 @@
+name: app
+# Builds a private app for the iOS Simulator and screenshots it. The source is fetched at run time
+# with a read-only deploy key (secret) and never committed here; every step's output goes to a log
+# file; screenshots and logs leave the runner only as an AES-encrypted archive (password = secret).
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: git ref to build
+        default: master
+jobs:
+  app:
+    runs-on: macos-15
+    timeout-minutes: 90
+    steps:
+      - name: Fetch source (private)
+        env:
+          KEY: ${{ secrets.SAVVY_DEPLOY_KEY }}
+        run: |
+          mkdir -p ~/.ssh out
+          printf '%s\n' "$KEY" > ~/.ssh/deploy && chmod 600 ~/.ssh/deploy
+          ssh-keyscan github.com >> ~/.ssh/known_hosts 2>/dev/null
+          GIT_SSH_COMMAND="ssh -i ~/.ssh/deploy" git clone -q --depth 1 --branch "${{ inputs.ref }}" \
+            git@github.com:Abdellatifemara/SavvyTravel.git src >/dev/null 2>&1 && echo "source ok" || { echo "source failed"; exit 1; }
+          rm -f ~/.ssh/deploy
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Build for the simulator
+        env:
+          ENVIRONMENT: production
+          EXPO_PUBLIC_ENVIRONMENT: production
+          EXPO_PUBLIC_API_URL: https://api.savvytravel.app/api/v1
+        run: |
+          set -o pipefail
+          cd src/MobileFrontend
+          { npm ci --no-audit --no-fund && npx expo prebuild -p ios --clean --no-install \
+            && (cd ios && pod install) ; } > ../../out/install.log 2>&1 && echo "install ok" || { echo "install failed"; exit 1; }
+          WS=$(ls -d ios/*.xcworkspace | head -1); SCHEME=$(basename "$WS" .xcworkspace)
+          xcodebuild -workspace "$WS" -scheme "$SCHEME" -configuration Release -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' -derivedDataPath ../../dd CODE_SIGNING_ALLOWED=NO build \
+            > ../../out/xcodebuild.log 2>&1 && echo "build ok" || { echo "build failed"; exit 1; }
+      - name: Run in the simulator
+        run: |
+          mkdir -p out/shots
+          UDID=$(xcrun simctl list devices available | grep -E "iPhone 16 Pro \(" | head -1 | grep -oE "[0-9A-F-]{36}")
+          [ -n "$UDID" ] || UDID=$(xcrun simctl list devices available | grep -E "iPhone" | head -1 | grep -oE "[0-9A-F-]{36}")
+          xcrun simctl boot "$UDID" && xcrun simctl bootstatus "$UDID" -b > /dev/null
+          APP=$(ls -d dd/Build/Products/Release-iphonesimulator/*.app | head -1)
+          BID=$(/usr/libexec/PlistBuddy -c "Print CFBundleIdentifier" "$APP/Info.plist")
+          xcrun simctl install "$UDID" "$APP"
+          xcrun simctl privacy "$UDID" grant location "$BID" || true
+          xcrun simctl location "$UDID" set 30.0571,31.2243 || true
+          xcrun simctl launch "$UDID" "$BID" > /dev/null
+          sleep 30; xcrun simctl io "$UDID" screenshot out/shots/01-launch.png > /dev/null
+          xcrun simctl spawn "$UDID" log show --last 3m --predicate "process == \"$(basename "$APP" .app)\"" > out/device.log 2>&1 || true
+          echo "run ok"
+      - name: Encrypt results
+        if: always()
+        env:
+          PASS: ${{ secrets.SHOTS_PASSWORD }}
+        run: |
+          tar czf results.tgz out 2>/dev/null || true
+          openssl enc -aes-256-cbc -pbkdf2 -iter 200000 -salt -in results.tgz -out results.enc -pass env:PASS
+          rm -rf out results.tgz src dd
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: results
+          path: results.enc
