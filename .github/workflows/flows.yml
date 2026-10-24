@@ -42,7 +42,14 @@ jobs:
         env:
           SIM_TOKEN: ${{ secrets.SIM_TOKEN }}
         run: |
-          if [ "${{ inputs.runtime }}" = "newest" ]; then
+          if [ "${{ inputs.runtime }}" != "default" ] && [ "${{ inputs.runtime }}" != "newest" ]; then
+            # An older iOS (e.g. 17.5): download that simulator runtime, then make a device on it.
+            xcrun simctl list runtimes | grep -q "iOS ${{ inputs.runtime }}" ||               sudo xcodebuild -downloadPlatform iOS -buildVersion "${{ inputs.runtime }}" > out/runtime-download.log 2>&1 || true
+            xcrun simctl list runtimes | grep -i ios
+            RT=$(xcrun simctl list runtimes | grep -E "^iOS ${{ inputs.runtime }}" | head -1 | grep -oE "com\.apple\.CoreSimulator\.SimRuntime\.[A-Za-z0-9-]+")
+            DT=$(xcrun simctl list devicetypes | grep -E "iPhone 15 Pro \(" | head -1 | grep -oE "com\.apple\.CoreSimulator\.SimDeviceType\.[A-Za-z0-9-]+")
+            UDID=$(xcrun simctl create "Old" "$DT" "$RT")
+          elif [ "${{ inputs.runtime }}" = "newest" ]; then
             RT=$(xcrun simctl list runtimes | grep -E "^iOS" | grep -v unavailable | tail -1 | grep -oE "com\.apple\.CoreSimulator\.SimRuntime\.[A-Za-z0-9-]+")
             UDID=$(xcrun simctl create "New" "iPhone 16 Pro" "$RT")
           else
