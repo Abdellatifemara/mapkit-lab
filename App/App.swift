@@ -86,7 +86,10 @@ final class MapViewController: UIViewController {
     let pitch = Double(arg("pitch", "0")) ?? 0
     let heading = Double(arg("heading", "0")) ?? 0
     let centre = CLLocationCoordinate2D(latitude: lat, longitude: lng)
-    if span >= 60 {
+    if let dist = Double(arg("distance", "")) {
+      // Camera distance in metres (globe test: ~20,000 km).
+      map.setCamera(MKMapCamera(lookingAtCenter: centre, fromDistance: dist, pitch: CGFloat(pitch), heading: heading), animated: false)
+    } else if span >= 60 {
       // Fully zoomed out: MapKit decides globe vs flat by the configuration.
       map.setRegion(MKCoordinateRegion(center: centre, span: MKCoordinateSpan(latitudeDelta: 150, longitudeDelta: 150)), animated: false)
     } else {

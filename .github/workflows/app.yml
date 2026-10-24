@@ -31,7 +31,7 @@ jobs:
           ENVIRONMENT: production
           EXPO_PUBLIC_ENVIRONMENT: production
           EXPO_PUBLIC_API_URL: https://api.savvytravel.app/api/v1
-          E2E_SIM_TOKEN: ${{ secrets.SIM_TOKEN }}
+          E2E_SIM_LAB: "1"
         run: |
           set -o pipefail
           cd src/MobileFrontend
@@ -42,6 +42,8 @@ jobs:
             -destination 'generic/platform=iOS Simulator' -derivedDataPath ../../dd CODE_SIGNING_ALLOWED=NO build \
             > ../../out/xcodebuild.log 2>&1 && echo "build ok" || { echo "build failed"; exit 1; }
       - name: Run in the simulator
+        env:
+          SIM_TOKEN: ${{ secrets.SIM_TOKEN }}
         run: |
           mkdir -p out/shots
           UDID=$(xcrun simctl list devices available | grep -E "iPhone 16 Pro \(" | head -1 | grep -oE "[0-9A-F-]{36}")
@@ -50,6 +52,9 @@ jobs:
           APP=$(ls -d dd/Build/Products/Release-iphonesimulator/*.app | head -1)
           BID=$(/usr/libexec/PlistBuddy -c "Print CFBundleIdentifier" "$APP/Info.plist")
           xcrun simctl install "$UDID" "$APP"
+          # Signed in as the TEST account without a token in the bundle: the app (simLab build only)
+          # reads it from its own defaults, written here.
+          xcrun simctl spawn "$UDID" defaults write "$BID" simToken "$SIM_TOKEN"
           xcrun simctl privacy "$UDID" grant location "$BID" || true
           xcrun simctl location "$UDID" set 30.0571,31.2243 || true
           xcrun simctl launch "$UDID" "$BID" > /dev/null

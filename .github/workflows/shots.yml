@@ -53,6 +53,9 @@ jobs:
           shot 10-globe-hybrid        -style hybrid    -poi all -span 150
           shot 11-sheet-no-inset      -style realistic -poi travel -sheet 1 -legalInset 0
           shot 12-sheet-with-inset    -style realistic -poi travel -sheet 1 -legalInset 1
+          shot 14-globe-cam-standard  -style standard  -poi all -lat 26.8 -lng 30.8 -distance 20000000
+          shot 15-globe-cam-realistic -style realistic -poi all -lat 26.8 -lng 30.8 -distance 20000000
+          shot 16-globe-cam-hybrid    -style hybrid    -poi all -lat 26.8 -lng 30.8 -distance 20000000
           shot 13-giza-realistic-tilt -style realistic -poi travel -lat 29.9792 -lng 31.1342 -span 0.03 -pitch 50
           xcrun simctl terminate "$UDID" dev.mapkitlab.app 2>/dev/null || true
           # Apple's own Maps app at the same spots, for comparison (last, so nothing sits on top of ours).
