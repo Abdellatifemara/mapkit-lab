@@ -73,7 +73,17 @@ jobs:
           export PATH="$PATH:$HOME/.maestro/bin"
           xcrun simctl spawn "$UDID" log stream --level info --style compact --predicate 'process == "SavvyTravel"' > out/app-stream.log 2>&1 &
           mkdir -p out/flow && cd out/flow
-          maestro --device "$UDID" test --test-output-dir . "../../lab/flows/${{ inputs.flow }}" > ../maestro.log 2>&1 || echo "flow had failures"
+          if [ "${{ inputs.flow }}" = "offline" ]; then
+            maestro --device "$UDID" test --test-output-dir . ../../lab/flows/offline-warm.yaml > ../maestro-warm.log 2>&1 || echo "warm had failures"
+            # Offline: the API (and Cloudflare in front of it) unreachable from this Mac and its simulator.
+            echo "127.0.0.1 api.savvytravel.app" | sudo tee -a /etc/hosts > /dev/null
+            sudo dscacheutil -flushcache; sudo killall -HUP mDNSResponder || true
+            curl -s -m 5 -o /dev/null -w "api after block: %{http_code}
+" https://api.savvytravel.app/health > ../offline-proof.txt 2>&1 || echo "api unreachable (good)" >> ../offline-proof.txt
+            maestro --device "$UDID" test --test-output-dir . ../../lab/flows/offline-check.yaml > ../maestro.log 2>&1 || echo "flow had failures"
+          else
+            maestro --device "$UDID" test --test-output-dir . "../../lab/flows/${{ inputs.flow }}" > ../maestro.log 2>&1 || echo "flow had failures"
+          fi
           cp ../../lab/flows/*.png . 2>/dev/null || true
           find "$HOME/.maestro/tests" -name "*.png" -exec cp {} . \; 2>/dev/null || true
           ls

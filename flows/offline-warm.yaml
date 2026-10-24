@@ -1,0 +1,24 @@
+appId: com.savvytravel.app
+---
+- launchApp:
+    stopApp: true
+- extendedWaitUntil:
+    visible: ".*Map.*"
+    timeout: 60000
+- takeScreenshot: w01-home-online
+- tapOn: ".*Trips.*"
+- waitForAnimationToEnd:
+    timeout: 8000
+- takeScreenshot: w02-trips-online
+- openLink: "savvytravel://collection/4e1e1cbf-cfdf-480c-8d95-5ca493fed365"
+- tapOn:
+    text: "Open"
+    optional: true
+- waitForAnimationToEnd:
+    timeout: 10000
+- takeScreenshot: w03-trip-online
+- tapOn: ".*Discover.*"
+- waitForAnimationToEnd:
+    timeout: 10000
+- takeScreenshot: w04-discover-online
+- stopApp

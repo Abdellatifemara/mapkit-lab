@@ -1,0 +1,31 @@
+appId: com.savvytravel.app
+---
+- launchApp:
+    stopApp: true
+- waitForAnimationToEnd:
+    timeout: 8000
+- takeScreenshot: x01-launch-offline
+- extendedWaitUntil:
+    visible: ".*Map.*"
+    timeout: 20000
+    optional: true
+- takeScreenshot: x02-home-offline
+- tapOn:
+    text: ".*Trips.*"
+    optional: true
+- waitForAnimationToEnd:
+    timeout: 6000
+- takeScreenshot: x03-trips-offline
+- openLink: "savvytravel://collection/4e1e1cbf-cfdf-480c-8d95-5ca493fed365"
+- tapOn:
+    text: "Open"
+    optional: true
+- waitForAnimationToEnd:
+    timeout: 8000
+- takeScreenshot: x04-trip-offline
+- tapOn:
+    text: ".*Discover.*"
+    optional: true
+- waitForAnimationToEnd:
+    timeout: 6000
+- takeScreenshot: x05-discover-offline
