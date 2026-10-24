@@ -1,0 +1,49 @@
+appId: com.savvytravel.app
+---
+- setLocation:
+    latitude: 30.0750
+    longitude: 31.2000
+- launchApp:
+    stopApp: true
+- extendedWaitUntil:
+    visible: ".*Map.*"
+    timeout: 60000
+- tapOn: ".*Profile.*"
+- waitForAnimationToEnd:
+    timeout: 5000
+- scrollUntilVisible:
+    element:
+      text: ".*Proximity Alerts.*"
+    timeout: 20000
+    optional: true
+- takeScreenshot: p01-profile
+- tapOn:
+    text: ".*Proximity Alerts.*"
+    optional: true
+- tapOn:
+    text: "(Allow|Allow While Using App|Change to Always Allow|Allow While Using the App)"
+    optional: true
+- tapOn:
+    text: "(Allow|Change to Always Allow)"
+    optional: true
+- waitForAnimationToEnd:
+    timeout: 15000
+- takeScreenshot: p02-after-toggle
+- setLocation:
+    latitude: 30.0590
+    longitude: 31.2250
+- waitForAnimationToEnd:
+    timeout: 30000
+- takeScreenshot: p03-near-palace
+- pressKey: home
+- setLocation:
+    latitude: 30.0750
+    longitude: 31.2000
+- waitForAnimationToEnd:
+    timeout: 10000
+- setLocation:
+    latitude: 30.0640
+    longitude: 31.2199
+- waitForAnimationToEnd:
+    timeout: 30000
+- takeScreenshot: p04-home-near-gallery

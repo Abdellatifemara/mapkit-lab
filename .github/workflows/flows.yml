@@ -46,7 +46,7 @@ jobs:
           BID=$(/usr/libexec/PlistBuddy -c "Print CFBundleIdentifier" "$APP/Info.plist")
           xcrun simctl install "$UDID" "$APP"
           xcrun simctl spawn "$UDID" defaults write "$BID" simToken "$SIM_TOKEN"
-          xcrun simctl privacy "$UDID" grant location "$BID" || true
+          xcrun simctl privacy "$UDID" grant location-always "$BID" || xcrun simctl privacy "$UDID" grant location "$BID" || true
           xcrun simctl location "$UDID" set 30.0571,31.2243 || true
           echo "UDID=$UDID" >> "$GITHUB_ENV"
       - name: Drive the flows (Maestro)
