@@ -56,7 +56,7 @@ jobs:
             && (cd ios && pod install)             && for f in ios/*/Supporting/Expo.plist; do /usr/libexec/PlistBuddy -c "Set :EXUpdatesEnabled false" "$f" || /usr/libexec/PlistBuddy -c "Add :EXUpdatesEnabled bool false" "$f"; done ; } > ../../out/install.log 2>&1 && echo "install ok" || { echo "install failed"; exit 1; }
           WS=$(ls -d ios/*.xcworkspace | head -1); SCHEME=$(basename "$WS" .xcworkspace)
           xcodebuild -workspace "$WS" -scheme "$SCHEME" -configuration Release -sdk iphonesimulator \
-            -destination 'generic/platform=iOS Simulator' -derivedDataPath ../../dd CODE_SIGNING_ALLOWED=YES CODE_SIGNING_REQUIRED=NO CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY=- \n            DEVELOPMENT_TEAM= PROVISIONING_PROFILE_SPECIFIER= build \
+            -destination 'generic/platform=iOS Simulator' -derivedDataPath ../../dd CODE_SIGNING_ALLOWED=YES CODE_SIGNING_REQUIRED=NO CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY=- DEVELOPMENT_TEAM= PROVISIONING_PROFILE_SPECIFIER= build \
             > ../../out/xcodebuild.log 2>&1 && echo "build ok" || { echo "build failed"; exit 1; }
       - name: Run in the simulator
         env:
