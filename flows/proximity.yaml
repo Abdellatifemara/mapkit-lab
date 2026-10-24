@@ -29,12 +29,25 @@ appId: com.savvytravel.app
 - waitForAnimationToEnd:
     timeout: 15000
 - takeScreenshot: p02-after-toggle
+- pressKey: home
 - setLocation:
     latitude: 30.0590
     longitude: 31.2250
 - waitForAnimationToEnd:
-    timeout: 30000
-- takeScreenshot: p03-near-palace
+    timeout: 4000
+- takeScreenshot: p03a-near-palace-4s
+- waitForAnimationToEnd:
+    timeout: 6000
+- takeScreenshot: p03b-near-palace-10s
+- swipe:
+    start: 20%, 1%
+    end: 20%, 70%
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: p03c-notification-center
+- swipe:
+    start: 50%, 99%
+    end: 50%, 20%
 - pressKey: home
 - setLocation:
     latitude: 30.0750
@@ -47,3 +60,9 @@ appId: com.savvytravel.app
 - waitForAnimationToEnd:
     timeout: 30000
 - takeScreenshot: p04-home-near-gallery
+- swipe:
+    start: 20%, 1%
+    end: 20%, 70%
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: p05-notification-center
