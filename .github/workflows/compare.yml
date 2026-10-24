@@ -35,12 +35,15 @@ jobs:
           shot() { n=$1; shift; xcrun simctl terminate "$UDID" dev.mapkitlab.app 2>/dev/null || true
             xcrun simctl launch "$UDID" dev.mapkitlab.app "$@" > /dev/null; sleep 15
             xcrun simctl io "$UDID" screenshot "shots/$n.png" > /dev/null; echo "shot $n"; }
-          for st in legacy flat standard realistic; do
-            shot "k-$st-street"  -style $st -poi all -span 0.02
-            shot "k-$st-country" -style $st -poi all -lat 26.8 -lng 30.8 -span 15
+          for st in standard realistic; do
+            shot "w-$st-span150"  -style $st -poi all -span 150
+            shot "w-$st-cam20000" -style $st -poi all -lat 26.8 -lng 30.8 -distance 20000000
+            shot "w-$st-cam8000"  -style $st -poi all -lat 26.8 -lng 30.8 -distance 8000000
+            shot "w-$st-span60"   -style $st -poi all -lat 26.8 -lng 30.8 -span 60
           done
           xcrun simctl terminate "$UDID" dev.mapkitlab.app || true
       - name: Apple Maps app (Maestro)
+        if: false
         continue-on-error: true
         run: |
           export MAESTRO_CLI_NO_ANALYTICS=1
