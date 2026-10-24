@@ -57,7 +57,9 @@ jobs:
           export PATH="$PATH:$HOME/.maestro/bin"
           xcrun simctl spawn "$UDID" log stream --level info --style compact --predicate 'process == "SavvyTravel"' > out/app-stream.log 2>&1 &
           mkdir -p out/flow && cd out/flow
-          maestro test "../../lab/flows/${{ inputs.flow }}" > ../maestro.log 2>&1 || echo "flow had failures"
+          maestro test --test-output-dir . "../../lab/flows/${{ inputs.flow }}" > ../maestro.log 2>&1 || echo "flow had failures"
+          cp ../../lab/flows/*.png . 2>/dev/null || true
+          find "$HOME/.maestro/tests" -name "*.png" -exec cp {} . \; 2>/dev/null || true
           ls
       - name: Encrypt results
         if: always()
