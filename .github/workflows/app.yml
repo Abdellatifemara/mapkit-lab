@@ -33,6 +33,16 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+      - name: Cache public downloads
+        uses: actions/cache@v4
+        with:
+          # Public downloads only: the derived data and Pods hold our compiled private code, and a
+          # public repo's caches are not private, so those are never cached.
+          path: |
+            ~/Library/Caches/CocoaPods
+            ~/.npm
+          key: sim-${{ hashFiles('src/MobileFrontend/package-lock.json') }}
+          restore-keys: sim-
       - name: Build for the simulator
         env:
           ENVIRONMENT: production
@@ -64,10 +74,16 @@ jobs:
           xcrun simctl spawn "$UDID" defaults write "$BID" simToken "$SIM_TOKEN"
           xcrun simctl privacy "$UDID" grant location "$BID" || true
           xcrun simctl location "$UDID" set 30.0571,31.2243 || true
-          xcrun simctl launch "$UDID" "$BID" > /dev/null
-          sleep 30; xcrun simctl io "$UDID" screenshot out/shots/01-launch.png > /dev/null
-          xcrun simctl spawn "$UDID" log show --last 3m --predicate "process == \"$(basename "$APP" .app)\"" > out/device.log 2>&1 || true
-          echo "run ok"
+          # Console (stdout/stderr incl. JS errors) for 45 s, screenshots along the way.
+          xcrun simctl launch --console-pty "$UDID" "$BID" > out/console.log 2>&1 &
+          LPID=$!
+          sleep 5;  xcrun simctl io "$UDID" screenshot out/shots/01-at-5s.png > /dev/null
+          sleep 10; xcrun simctl io "$UDID" screenshot out/shots/02-at-15s.png > /dev/null
+          sleep 25; xcrun simctl io "$UDID" screenshot out/shots/03-at-40s.png > /dev/null
+          kill $LPID 2>/dev/null || true
+          xcrun simctl spawn "$UDID" log show --last 5m --style compact             --predicate 'process CONTAINS[c] "SavvyTravel" OR subsystem CONTAINS[c] "savvytravel" OR eventMessage CONTAINS[c] "SavvyTravel"'             > out/device.log 2>&1 || true
+          mkdir -p out/crash; cp ~/Library/Logs/DiagnosticReports/*SavvyTravel* out/crash/ 2>/dev/null || true
+          ls out/crash | head; echo "run ok"
       - name: Encrypt results
         if: always()
         env:
