@@ -78,8 +78,7 @@ jobs:
             # Offline: the API (and Cloudflare in front of it) unreachable from this Mac and its simulator.
             echo "127.0.0.1 api.savvytravel.app" | sudo tee -a /etc/hosts > /dev/null
             sudo dscacheutil -flushcache; sudo killall -HUP mDNSResponder || true
-            curl -s -m 5 -o /dev/null -w "api after block: %{http_code}
-" https://api.savvytravel.app/health > ../offline-proof.txt 2>&1 || echo "api unreachable (good)" >> ../offline-proof.txt
+            curl -s -m 5 -o /dev/null -w "api after block: %{http_code}" https://api.savvytravel.app/health > ../offline-proof.txt 2>&1 || echo "api unreachable (good)" >> ../offline-proof.txt
             maestro --device "$UDID" test --test-output-dir . ../../lab/flows/offline-check.yaml > ../maestro.log 2>&1 || echo "flow had failures"
           else
             maestro --device "$UDID" test --test-output-dir . "../../lab/flows/${{ inputs.flow }}" > ../maestro.log 2>&1 || echo "flow had failures"
