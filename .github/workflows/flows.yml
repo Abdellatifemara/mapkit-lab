@@ -1,0 +1,75 @@
+name: flows
+# Re-runs Maestro flows against an app already built by app.yml (its encrypted "app" artifact), so a
+# flow change costs minutes, not a rebuild. Results leave the runner only as an encrypted archive.
+on:
+  workflow_dispatch:
+    inputs:
+      app_run:
+        description: app.yml run id whose app artifact to use
+        required: true
+      flow:
+        description: flow file under flows/
+        default: apple.yaml
+permissions:
+  actions: read
+  contents: read
+jobs:
+  flows:
+    runs-on: macos-15
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: lab
+      - name: Fetch the app
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PASS: ${{ secrets.SHOTS_PASSWORD }}
+        run: |
+          mkdir -p out app
+          gh run download "${{ inputs.app_run }}" -R "${{ github.repository }}" -n app -D dl > /dev/null
+          openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 -in dl/app.enc -out app.tgz -pass env:PASS
+          tar xzf app.tgz -C app && rm -rf dl app.tgz && ls app
+      - name: Newest Xcode
+        run: |
+          X=$(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort -V | tail -1)
+          [ -n "$X" ] || X=$(ls -d /Applications/Xcode*.app | sort -V | tail -1)
+          sudo xcode-select -s "$X"
+      - name: Install in the simulator
+        env:
+          SIM_TOKEN: ${{ secrets.SIM_TOKEN }}
+        run: |
+          UDID=$(xcrun simctl list devices available | grep -E "iPhone 16 Pro \(" | head -1 | grep -oE "[0-9A-F-]{36}")
+          [ -n "$UDID" ] || UDID=$(xcrun simctl list devices available | grep -E "iPhone" | head -1 | grep -oE "[0-9A-F-]{36}")
+          xcrun simctl boot "$UDID" && xcrun simctl bootstatus "$UDID" -b > /dev/null
+          APP=$(ls -d app/*.app | head -1)
+          BID=$(/usr/libexec/PlistBuddy -c "Print CFBundleIdentifier" "$APP/Info.plist")
+          xcrun simctl install "$UDID" "$APP"
+          xcrun simctl spawn "$UDID" defaults write "$BID" simToken "$SIM_TOKEN"
+          xcrun simctl privacy "$UDID" grant location "$BID" || true
+          xcrun simctl location "$UDID" set 30.0571,31.2243 || true
+          echo "UDID=$UDID" >> "$GITHUB_ENV"
+      - name: Drive the flows (Maestro)
+        continue-on-error: true
+        run: |
+          export MAESTRO_CLI_NO_ANALYTICS=1
+          curl -Ls "https://get.maestro.mobile.dev" | bash > out/maestro-install.log 2>&1
+          export PATH="$PATH:$HOME/.maestro/bin"
+          xcrun simctl spawn "$UDID" log stream --level info --style compact --predicate 'process == "SavvyTravel"' > out/app-stream.log 2>&1 &
+          mkdir -p out/flow && cd out/flow
+          maestro test "../../lab/flows/${{ inputs.flow }}" > ../maestro.log 2>&1 || echo "flow had failures"
+          ls
+      - name: Encrypt results
+        if: always()
+        env:
+          PASS: ${{ secrets.SHOTS_PASSWORD }}
+        run: |
+          mkdir -p out/crash; cp ~/Library/Logs/DiagnosticReports/*SavvyTravel* out/crash/ 2>/dev/null || true
+          tar czf results.tgz out 2>/dev/null || true
+          openssl enc -aes-256-cbc -pbkdf2 -iter 200000 -salt -in results.tgz -out results.enc -pass env:PASS
+          rm -rf out results.tgz app
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: results
+          path: results.enc

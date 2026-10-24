@@ -107,9 +107,20 @@ jobs:
         run: |
           tar czf results.tgz out 2>/dev/null || true
           openssl enc -aes-256-cbc -pbkdf2 -iter 200000 -salt -in results.tgz -out results.enc -pass env:PASS
-          rm -rf out results.tgz src dd
+          # The built app, encrypted the same way, so flows.yml can re-run flows without a rebuild.
+          if ls -d dd/Build/Products/Release-iphonesimulator/*.app > /dev/null 2>&1; then
+            (cd dd/Build/Products/Release-iphonesimulator && tar czf ../../../../app.tgz *.app)
+            openssl enc -aes-256-cbc -pbkdf2 -iter 200000 -salt -in app.tgz -out app.enc -pass env:PASS
+          fi
+          rm -rf out results.tgz app.tgz src dd
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: results
           path: results.enc
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: app
+          path: app.enc
+          retention-days: 7
