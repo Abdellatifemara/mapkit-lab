@@ -41,7 +41,7 @@ appId: com.savvytravel.app
     timeout: 8000
 - takeScreenshot: f05-place-sheet
 - tapOn:
-    text: "Add to trip"
+    id: "apple-place-add-to-trip"
     optional: true
 - waitForAnimationToEnd:
     timeout: 5000
@@ -53,7 +53,7 @@ appId: com.savvytravel.app
     timeout: 10000
 - takeScreenshot: f07-after-new-trip
 - tapOn:
-    text: "Trips"
+    text: ".*Trips.*"
     optional: true
 - waitForAnimationToEnd:
     timeout: 8000
