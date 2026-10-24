@@ -88,6 +88,14 @@ jobs:
           xcrun simctl spawn "$UDID" log show --last 5m --style compact             --predicate 'process CONTAINS[c] "SavvyTravel" OR subsystem CONTAINS[c] "savvytravel" OR eventMessage CONTAINS[c] "SavvyTravel"'             > out/device.log 2>&1 || true
           mkdir -p out/crash; cp ~/Library/Logs/DiagnosticReports/*SavvyTravel* out/crash/ 2>/dev/null || true
           ls out/crash | head; echo "run ok"
+      - name: Drive the flows (Maestro)
+        continue-on-error: true
+        run: |
+          curl -Ls "https://get.maestro.mobile.dev" | bash > out/maestro-install.log 2>&1
+          export PATH="$PATH:$HOME/.maestro/bin"
+          mkdir -p out/flow && cd out/flow
+          maestro test ../../flows/apple.yaml > ../maestro.log 2>&1 || echo "flow had failures"
+          ls
       - name: Encrypt results
         if: always()
         env:
