@@ -34,15 +34,19 @@ appId: com.savvytravel.app
 - waitForAnimationToEnd:
     timeout: 5000
 - takeScreenshot: t04-sheet
-- scrollUntilVisible:
-    element:
-      text: "(Plan my trip|Plan these days again)"
-      index: 1
-    timeout: 15000
-    optional: true
+- swipe:
+    direction: UP
+- swipe:
+    direction: UP
+- swipe:
+    direction: UP
+- takeScreenshot: t04b-sheet-bottom
 - tapOn:
     text: "(Plan my trip|Plan these days again)"
     index: 1
+    optional: true
+- tapOn:
+    text: "(Plan my trip|Plan these days again)"
     optional: true
 - waitForAnimationToEnd:
     timeout: 60000
