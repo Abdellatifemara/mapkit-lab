@@ -26,6 +26,10 @@ jobs:
           xcrun simctl bootstatus "$UDID" -b
           xcrun simctl install "$UDID" build/Build/Products/Debug-iphonesimulator/MapKitLab.app
           xcrun simctl status_bar "$UDID" override --time 9:41 || true
+          # No permission prompts over the screenshots: grant location up front, set a Cairo fix.
+          xcrun simctl privacy "$UDID" grant location-always com.apple.Maps || true
+          xcrun simctl privacy "$UDID" grant location dev.mapkitlab.app || true
+          xcrun simctl location "$UDID" set 30.0571,31.2243 || true
       - name: Screenshots
         run: |
           mkdir -p shots
@@ -37,9 +41,6 @@ jobs:
             xcrun simctl io "$UDID" screenshot "shots/$n.png"
             echo "shot $n"
           }
-          # Apple's own Maps app at the same spot, for comparison.
-          xcrun simctl openurl "$UDID" "maps://?ll=30.0571,31.2243&z=16" && sleep 18 && xcrun simctl io "$UDID" screenshot shots/00-apple-maps-app-zamalek.png || true
-          xcrun simctl openurl "$UDID" "maps://?ll=26.8,30.8&z=3" && sleep 18 && xcrun simctl io "$UDID" screenshot shots/00-apple-maps-app-zoomed-out.png || true
           shot 01-standard-all        -style standard  -poi all
           shot 02-standard-travel     -style standard  -poi travel
           shot 03-realistic-all       -style realistic -poi all
@@ -53,6 +54,11 @@ jobs:
           shot 11-sheet-no-inset      -style realistic -poi travel -sheet 1 -legalInset 0
           shot 12-sheet-with-inset    -style realistic -poi travel -sheet 1 -legalInset 1
           shot 13-giza-realistic-tilt -style realistic -poi travel -lat 29.9792 -lng 31.1342 -span 0.03 -pitch 50
+          xcrun simctl terminate "$UDID" dev.mapkitlab.app 2>/dev/null || true
+          # Apple's own Maps app at the same spots, for comparison (last, so nothing sits on top of ours).
+          xcrun simctl openurl "$UDID" "maps://?ll=30.0571,31.2243&z=16" && sleep 20 && xcrun simctl io "$UDID" screenshot shots/00-apple-maps-app-zamalek.png || true
+          xcrun simctl openurl "$UDID" "maps://?ll=29.9792,31.1342&z=15" && sleep 20 && xcrun simctl io "$UDID" screenshot shots/00-apple-maps-app-giza.png || true
+          xcrun simctl openurl "$UDID" "maps://?ll=26.8,30.8&z=3" && sleep 20 && xcrun simctl io "$UDID" screenshot shots/00-apple-maps-app-zoomed-out.png || true
       - uses: actions/upload-artifact@v4
         with:
           name: shots
