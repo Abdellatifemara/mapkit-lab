@@ -77,9 +77,10 @@ jobs:
           # Console (stdout/stderr incl. JS errors) for 45 s, screenshots along the way.
           xcrun simctl launch --console-pty "$UDID" "$BID" > out/console.log 2>&1 &
           LPID=$!
-          sleep 5;  xcrun simctl io "$UDID" screenshot out/shots/01-at-5s.png > /dev/null
-          sleep 10; xcrun simctl io "$UDID" screenshot out/shots/02-at-15s.png > /dev/null
-          sleep 25; xcrun simctl io "$UDID" screenshot out/shots/03-at-40s.png > /dev/null
+          xcrun simctl io "$UDID" recordVideo --codec h264 --force out/shots/launch.mp4 > /dev/null 2>&1 &
+          VPID=$!
+          for t in 30 60 90 120; do sleep 30; xcrun simctl io "$UDID" screenshot "out/shots/at-${t}s.png" > /dev/null; done
+          kill -INT $VPID 2>/dev/null; sleep 3
           kill $LPID 2>/dev/null || true
           xcrun simctl spawn "$UDID" log show --last 5m --style compact             --predicate 'process CONTAINS[c] "SavvyTravel" OR subsystem CONTAINS[c] "savvytravel" OR eventMessage CONTAINS[c] "SavvyTravel"'             > out/device.log 2>&1 || true
           mkdir -p out/crash; cp ~/Library/Logs/DiagnosticReports/*SavvyTravel* out/crash/ 2>/dev/null || true
