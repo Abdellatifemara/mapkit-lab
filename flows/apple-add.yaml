@@ -49,10 +49,16 @@ appId: com.savvytravel.app
 - tapOn:
     id: "apple-place-trip-4e1e1cbf-cfdf-480c-8d95-5ca493fed365"
     optional: true
+- tapOn:
+    text: "E2E Giza pyramid"
+    optional: true
 - waitForAnimationToEnd:
     timeout: 8000
 - takeScreenshot: g07-after-add
 - openLink: "savvytravel://trips"
+- tapOn:
+    text: "Open"
+    optional: true
 - waitForAnimationToEnd:
     timeout: 8000
 - takeScreenshot: g08-trips
