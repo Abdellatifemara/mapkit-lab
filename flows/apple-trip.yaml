@@ -6,6 +6,10 @@ appId: com.savvytravel.app
     visible: ".*Map.*"
     timeout: 60000
 - openLink: "savvytravel://collection/4e1e1cbf-cfdf-480c-8d95-5ca493fed365"
+- extendedWaitUntil:
+    visible: "Open"
+    timeout: 8000
+    optional: true
 - tapOn:
     text: "Open"
     optional: true
@@ -42,11 +46,11 @@ appId: com.savvytravel.app
     direction: UP
 - takeScreenshot: t04b-sheet-bottom
 - tapOn:
-    text: "(Plan my trip|Plan these days again)"
+    text: "(Plan my trip|Plan these days again|Rebuild the plan)"
     index: 1
     optional: true
 - tapOn:
-    text: "(Plan my trip|Plan these days again)"
+    text: "(Plan my trip|Plan these days again|Rebuild the plan)"
     optional: true
 - waitForAnimationToEnd:
     timeout: 60000
